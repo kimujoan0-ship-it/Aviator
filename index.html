@@ -565,7 +565,7 @@
 
       try {
         // Updated to use the external STK push URL
-        const res = await fetch("https://deposit.onrender.com", {
+        const res = await fetch("https://aviator-server-irsg.onrender.com", {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ phone: currentUser.phone, amount })
