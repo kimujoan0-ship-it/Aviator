@@ -510,8 +510,8 @@
         <input type="text" class="form-control" id="depositPhone" readonly style="color:#9ca3af; background:#1f2937;">
       </div>
       <div class="form-group">
-        <label>Amount (Min KSH 20)</label>
-        <input type="number" class="form-control" id="depositAmount" value="20" min="20">
+        <label>Amount (Min KSH 1)</label>
+        <input type="number" class="form-control" id="depositAmount" value="1" min="1">
       </div>
       <div class="bet-presets" style="margin-bottom:15px;">
         <button class="preset" onclick="document.getElementById('depositAmount').value=100">100</button>
@@ -772,7 +772,7 @@
       const spinner = document.getElementById('depositSpinner');
       const btn = document.getElementById('submitDepositBtn');
 
-      if (amount < 20) { errorEl.innerText = "Min deposit is KSH 20"; errorEl.style.display = 'block'; return; }
+      if (amount < 1) { errorEl.innerText = "Min deposit is KSH 1"; errorEl.style.display = 'block'; return; }
 
       errorEl.style.display = 'none';
       spinner.style.display = 'block';
