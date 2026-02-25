@@ -277,12 +277,12 @@
     
     <div class="bet-amount">
       <button class="bet-btn-adjust" onclick="adjustBet(-10)">-</button>
-      <input type="number" class="bet-input" id="betAmount" value="10" min="10" max="100000">
+      <input type="number" class="bet-input" id="betAmount" value="10" min="1" max="100000">
       <button class="bet-btn-adjust" onclick="adjustBet(10)">+</button>
     </div>
 
     <div class="bet-presets">
-      <button class="preset" onclick="setBet(10)">10</button>
+      <button class="preset" onclick="setBet(1)">1</button>
       <button class="preset" onclick="setBet(20)">20</button>
       <button class="preset" onclick="setBet(50)">50</button>
       <button class="preset" onclick="setBet(100)">100</button>
@@ -511,7 +511,7 @@
       </div>
       <div class="form-group">
         <label>Amount (Min KSH 20)</label>
-        <input type="number" class="form-control" id="depositAmount" value="20" min="20">
+        <input type="number" class="form-control" id="depositAmount" value="1" min="1">
       </div>
       <div class="bet-presets" style="margin-bottom:15px;">
         <button class="preset" onclick="document.getElementById('depositAmount').value=100">100</button>
@@ -644,7 +644,14 @@
     async function doSignup() {
       hideAuthErrors();
       const username = document.getElementById('signupUsername').value;
-      const phone = document.getElementById('signupPhone').value;
+      const rawPhone = document.getElementById('signupPhone').value;
+const phone = formatPhone(rawPhone);
+
+if (!phone) {
+  errorEl.innerText = "Enter valid Safaricom number";
+  errorEl.style.display = 'block';
+  return;
+}
       const pin = document.getElementById('signupPin').value;
       const pinConfirm = document.getElementById('signupPinConfirm').value;
       const ref = document.getElementById('signupRef').value;
@@ -654,7 +661,6 @@
       const spinner = document.getElementById('signupSpinner');
 
       if (!username || !phone || !pin) { errorEl.innerText = "Fill all required fields"; errorEl.style.display = 'block'; return; }
-      if (!phone.startsWith('07') || phone.length < 10) { errorEl.innerText = "Phone must start with 07 and be valid length"; errorEl.style.display = 'block'; return; }
       if (pin !== pinConfirm) { errorEl.innerText = "PINs do not match"; errorEl.style.display = 'block'; return; }
       if (pin.length !== 6) { errorEl.innerText = "PIN must be 6 digits"; errorEl.style.display = 'block'; return; }
       if (!terms) { errorEl.innerText = "You must agree to terms"; errorEl.style.display = 'block'; return; }
@@ -689,7 +695,14 @@
 
     async function doLogin() {
       hideAuthErrors();
-      const phone = document.getElementById('loginPhone').value;
+      const rawPhone = document.getElementById('loginPhone').value;
+const phone = formatPhone(rawPhone);
+
+if (!phone) {
+  errorEl.innerText = "Enter valid Safaricom number";
+  errorEl.style.display = 'block';
+  return;
+}
       const pin = document.getElementById('loginPin').value;
       const errorEl = document.getElementById('loginError');
       const spinner = document.getElementById('loginSpinner');
@@ -772,7 +785,7 @@
       const spinner = document.getElementById('depositSpinner');
       const btn = document.getElementById('submitDepositBtn');
 
-      if (amount < 20) { errorEl.innerText = "Min deposit is KSH 20"; errorEl.style.display = 'block'; return; }
+      if (amount < 1) { errorEl.innerText = "Min deposit is KSH 1"; errorEl.style.display = 'block'; return; }
 
       errorEl.style.display = 'none';
       spinner.style.display = 'block';
@@ -1043,7 +1056,7 @@
       if (gameState === 'WAITING') {
         if (betStatus === 'NONE') {
           const amt = parseFloat(document.getElementById('betAmount').value);
-          if(amt < 10) { alert('Min bet is 10'); return; }
+          if(amt < 1) { alert('Min bet is 1'); return; }
           if(amt > currentUser.balance) { alert('Insufficient balance'); return; }
           betStatus = 'PLACED';
           updateBetBtn('CANCEL');
@@ -1111,7 +1124,7 @@
     function adjustBet(val) {
       let input = document.getElementById('betAmount');
       let newVal = parseInt(input.value) + val;
-      if(newVal >= 10 && newVal <= 100000) input.value = newVal;
+      if(newVal >= 1 && newVal <= 100000) input.value = newVal;
     }
     function setBet(val) { document.getElementById('betAmount').value = val; }
 
