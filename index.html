@@ -390,7 +390,7 @@
           document.getElementById('loadingScreen').style.display = 'none';
           initApp();
         }
-      }, 50);
+      }, 80);
     };
 
     function initApp() {
@@ -757,8 +757,8 @@
 
       // Decide crash point beforehand (Spribe-like fair math with ~1% edge)
       const e = 100;
-      const h = Math.random() * 100;
-      let crashPoint = Math.max(1.00, Math.floor(100 * e - e) / (e - h));
+      const h_rand = Math.random() * 100;
+      let crashPoint = Math.max(1.00, Math.floor(100 * e - e) / (e - h_rand));
       crashPoint = parseFloat(crashPoint.toFixed(2));
       if (crashPoint > 1500) crashPoint = 1500;
 
