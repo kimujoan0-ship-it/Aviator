@@ -277,12 +277,12 @@
     
     <div class="bet-amount">
       <button class="bet-btn-adjust" onclick="adjustBet(-10)">-</button>
-      <input type="number" class="bet-input" id="betAmount" value="10" min="10" max="100000">
+      <input type="number" class="bet-input" id="betAmount" value="1" min="1" max="100000">
       <button class="bet-btn-adjust" onclick="adjustBet(10)">+</button>
     </div>
 
     <div class="bet-presets">
-      <button class="preset" onclick="setBet(10)">10</button>
+      <button class="preset" onclick="setBet(10)">1</button>
       <button class="preset" onclick="setBet(20)">20</button>
       <button class="preset" onclick="setBet(50)">50</button>
       <button class="preset" onclick="setBet(100)">100</button>
@@ -510,11 +510,11 @@
         <input type="text" class="form-control" id="depositPhone" readonly style="color:#9ca3af; background:#1f2937;">
       </div>
       <div class="form-group">
-        <label>Amount (Min KSH 20)</label>
-        <input type="number" class="form-control" id="depositAmount" value="20" min="20">
+        <label>Amount (Min KSH 1)</label>
+        <input type="number" class="form-control" id="depositAmount" value="1" min="1">
       </div>
       <div class="bet-presets" style="margin-bottom:15px;">
-        <button class="preset" onclick="document.getElementById('depositAmount').value=100">100</button>
+        <button class="preset" onclick="document.getElementById('depositAmount').value=1">1</button>
         <button class="preset" onclick="document.getElementById('depositAmount').value=200">200</button>
         <button class="preset" onclick="document.getElementById('depositAmount').value=500">500</button>
         <button class="preset" onclick="document.getElementById('depositAmount').value=1000">1K</button>
