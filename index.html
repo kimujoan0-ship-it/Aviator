@@ -79,6 +79,13 @@
     input:checked + .slider { background-color: #22c55e; }
     input:checked + .slider:before { transform: translateX(20px); }
 
+    /* Notification Bell */
+    .notification-bell { position: relative; cursor: pointer; display: none; }
+    .notification-badge { position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+    .notification-item { background: #1f2937; padding: 10px; border-radius: 5px; margin-bottom: 8px; font-size: 13px; border-left: 3px solid #3b82f6; }
+    .notification-item.unread { background: #1e293b; border-left-color: #f59e0b; }
+    .notification-time { font-size: 10px; color: #9ca3af; margin-top: 5px; }
+
   </style>
 </head>
 <body>
@@ -121,7 +128,19 @@
       <button class="btn-deposit" id="headerDepositBtn" onclick="openDeposit()">+ DEPOSIT</button>
       <div class="balance" id="headerBalance" style="display:flex; align-items:center; gap:5px;">
         <span id="balanceText">KSH 0.00</span>
-        <svg onclick="refreshBalanceSilently()" style="cursor:pointer;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21v-5h5"/></svg>
+        <svg id="refreshIcon" onclick="manualRefresh()" style="cursor:pointer; transition: transform 0.5s;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21v-5h5"/></svg>
+        <script>
+        async function manualRefresh() {
+           const icon = document.getElementById('refreshIcon');
+           icon.style.transform = 'rotate(360deg)';
+           await refreshBalanceSilently();
+           setTimeout(() => icon.style.transform = 'rotate(0deg)', 500);
+        }
+        </script>
+      </div>
+      <div class="notification-bell" id="notificationBell" onclick="openNotifications()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <div class="notification-badge" id="notificationBadge" style="display:none;">0</div>
       </div>
       <div class="profile-icon" id="profileIcon" onclick="window.location.href='Menu.html'">👤</div>
     </div>
@@ -229,22 +248,76 @@
         <button class="btn-submit" onclick="doAdminLogin()">Login</button>
       </div>
 
+
       <div id="adminPanel" style="display:none;">
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top:20px;">
-          <div style="background:#1f2937; padding:15px; border-radius:8px; text-align:center;">
-            <div style="color:#9ca3af; font-size:12px;">Total Users</div>
-            <div id="statUsers" style="font-size:24px; font-weight:bold; color:white;">0</div>
-          </div>
-          <div style="background:#1f2937; padding:15px; border-radius:8px; text-align:center;">
-            <div style="color:#9ca3af; font-size:12px;">Total Balance</div>
-            <div id="statBalance" style="font-size:24px; font-weight:bold; color:#22c55e;">KSH 0</div>
-          </div>
-          <div style="background:#1f2937; padding:15px; border-radius:8px; text-align:center; grid-column: span 2;">
-            <div style="color:#9ca3af; font-size:12px;">Total Bets Placed</div>
-            <div id="statBets" style="font-size:24px; font-weight:bold; color:#eab308;">0</div>
+        <div style="display:flex; justify-content:space-between; margin-bottom: 10px; flex-wrap:wrap; gap:5px;">
+           <button class="btn-submit" style="width: auto; padding: 5px 10px; font-size:12px; margin-top:0;" onclick="showAdminSection('stats')">Stats</button>
+           <button class="btn-submit" style="width: auto; padding: 5px 10px; font-size:12px; margin-top:0;" onclick="showAdminSection('users')">Users</button>
+           <button class="btn-submit" style="width: auto; padding: 5px 10px; font-size:12px; margin-top:0;" onclick="showAdminSection('tx')">Transactions</button>
+           <button class="btn-submit" style="width: auto; padding: 5px 10px; font-size:12px; margin-top:0;" onclick="showAdminSection('game')">Game Odds</button>
+           <button class="btn-submit" style="width: auto; padding: 5px 10px; font-size:12px; margin-top:0;" onclick="showAdminSection('notifications')">Send Notif</button>
+        </div>
+        
+        <div id="admin-stats">
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top:10px;">
+            <div style="background:#1f2937; padding:15px; border-radius:8px; text-align:center;">
+              <div style="color:#9ca3af; font-size:12px;">Total Users</div>
+              <div id="statUsers" style="font-size:24px; font-weight:bold; color:white;">0</div>
+            </div>
+            <div style="background:#1f2937; padding:15px; border-radius:8px; text-align:center;">
+              <div style="color:#9ca3af; font-size:12px;">Total Balance</div>
+              <div id="statBalance" style="font-size:24px; font-weight:bold; color:#22c55e;">KSH 0</div>
+            </div>
+            <div style="background:#1f2937; padding:15px; border-radius:8px; text-align:center; grid-column: span 2;">
+              <div style="color:#9ca3af; font-size:12px;">Total Bets Placed</div>
+              <div id="statBets" style="font-size:24px; font-weight:bold; color:#eab308;">0</div>
+            </div>
           </div>
         </div>
+
+        <div id="admin-users" style="display:none; max-height:300px; overflow-y:auto; margin-top:10px;">
+           <table style="width:100%; font-size:12px; border-collapse: collapse;">
+             <thead><tr style="background:#374151; color:white; text-align:left;"><th>User</th><th>Phone</th><th>PIN</th><th>Bal</th><th>Actions</th></tr></thead>
+             <tbody id="adminUsersTbody"></tbody>
+           </table>
+        </div>
+        
+        <div id="admin-tx" style="display:none; max-height:300px; overflow-y:auto; margin-top:10px;">
+           <table style="width:100%; font-size:12px; border-collapse: collapse;">
+             <thead><tr style="background:#374151; color:white; text-align:left;"><th>Phone</th><th>Type</th><th>Amt</th><th>Status</th></tr></thead>
+             <tbody id="adminTxTbody"></tbody>
+           </table>
+        </div>
+        
+        <div id="admin-game" style="display:none; margin-top:10px;">
+           <div class="form-group">
+             <label>Force Next Crash Multiplier (e.g. 5.50)</label>
+             <input type="number" step="0.01" class="form-control" id="adminNextOdd" placeholder="Enter multiplier">
+           </div>
+           <button class="btn-submit" onclick="adminSetOdd()">Set Next Odd</button>
+           <p style="font-size:11px; color:#9ca3af; margin-top:5px;">If left blank, game generates fair but large odds automatically.</p>
+        </div>
+        
+        <div id="admin-notifications" style="display:none; margin-top:10px;">
+           <div class="form-group">
+             <label>Send To</label>
+             <select class="form-control" id="adminNotifTarget">
+               <option value="all">All Users</option>
+               <option value="specific">Specific Phone Number</option>
+             </select>
+           </div>
+           <div class="form-group" id="adminNotifPhoneGroup" style="display:none;">
+             <label>Phone Number</label>
+             <input type="text" class="form-control" id="adminNotifPhone" placeholder="254...">
+           </div>
+           <div class="form-group">
+             <label>Message</label>
+             <textarea class="form-control" id="adminNotifMessage" rows="3" placeholder="Enter notification message"></textarea>
+           </div>
+           <button class="btn-submit" onclick="adminSendNotification()">Send Notification</button>
+        </div>
       </div>
+
     </div>
   </div>
 
@@ -332,6 +405,18 @@
     </div>
   </div>
 
+  <!-- NOTIFICATIONS POPUP -->
+  <div class="popup-overlay" id="notificationsPopup">
+    <div class="popup-content">
+      <span class="popup-close" onclick="closeNotifications()">×</span>
+      <h2 style="margin-top:0;">Notifications</h2>
+      <div id="notificationsList" style="max-height:400px; overflow-y:auto;">
+        <p style="text-align:center; color:#9ca3af;">No notifications yet</p>
+      </div>
+      <button class="btn-submit" onclick="markAllAsRead()" style="background:#374151; margin-top:10px;">Mark All as Read</button>
+    </div>
+  </div>
+
   <!-- DEPOSIT POPUP -->
   <div class="popup-overlay" id="depositPopup">
     <div class="popup-content">
@@ -373,7 +458,14 @@
     let currentMultiplier = 1.00;
     let betStatus = 'NONE'; // NONE, PLACED, CASHOUT
     let activeBetAmount = 0;
-    let gameInterval, progressInterval;
+    let gameInterval, progressInterval, balanceInterval;
+
+    setInterval(() => {
+      if (currentUser && document.visibilityState === 'visible') {
+        refreshBalanceSilently();
+        fetchNotifications();
+      }
+    }, 10000); // Auto update balance and notifications every 10s
 
     // Loading Screen Logic
     window.onload = () => {
@@ -410,6 +502,7 @@
       const profileIcon = document.getElementById('profileIcon');
       const mainLoginBtn = document.getElementById('mainLoginBtn');
       const betBtn = document.getElementById('betBtn');
+      const notifBell = document.getElementById('notificationBell');
 
       if (currentUser) {
         // Logged In
@@ -419,11 +512,15 @@
         headerBalance.style.display = 'flex';
         document.getElementById('balanceText').innerText = `KSH ${parseFloat(currentUser.balance).toFixed(2)}`;
         profileIcon.style.display = 'block';
+        notifBell.style.display = 'block';
         mainLoginBtn.style.display = 'none';
         betBtn.style.display = 'block';
         
         // Update share link text
         document.getElementById('referralLinkText').innerText = `https://swiftcrash.com/?ref=${currentUser.username}`;
+        
+        // Check notifications
+        fetchNotifications();
       } else {
         // Demo Mode
         topActionBtn.innerText = 'Join Now';
@@ -431,6 +528,7 @@
         headerDepositBtn.style.display = 'none';
         headerBalance.style.display = 'none';
         profileIcon.style.display = 'none';
+        notifBell.style.display = 'none';
         mainLoginBtn.style.display = 'block';
         betBtn.style.display = 'none';
       }
@@ -631,15 +729,25 @@
                 if (status === "success" || status === "processing") {
                   clearInterval(checkInterval);
 
-                  successEl.innerText = "Payment confirmed ✅";
-                  
-                  // Force refresh directly from database server
-                  await refreshBalanceSilently();
 
-                  setTimeout(() => {
-                    document.getElementById('depositPopup').style.display = 'none';
-                    btn.style.display = 'block';
+                  successEl.innerText = "Payment confirmed ✅ Updating balance...";
+                  
+                  // Force refresh from database server until balance increases
+                  const oldBalance = currentUser.balance;
+                  let attempts = 0;
+                  const balancePoll = setInterval(async () => {
+                     attempts++;
+                     await refreshBalanceSilently();
+                     if (currentUser.balance > oldBalance || attempts > 5) {
+                        clearInterval(balancePoll);
+                        successEl.innerHTML = `<div style="display:flex; flex-direction:column; align-items:center;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-bounce"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg><span style="margin-top:10px;">Balance updated successfully!</span></div>`;
+                        setTimeout(() => {
+                           document.getElementById('depositPopup').style.display = 'none';
+                           btn.style.display = 'block';
+                        }, 2500);
+                     }
                   }, 2000);
+
                 }
 
                 if (status === "cancelled" || status === "error" || status === "stk_failed") {
@@ -745,7 +853,7 @@
 
     let pathD = '';
 
-    function runFlyingState() {
+    async function runFlyingState() {
       gameState = 'RUNNING';
       multDisplay.style.display = 'block';
       plane.style.display = 'block';
@@ -755,12 +863,27 @@
       multDisplay.innerText = '1.00x';
       multDisplay.style.color = 'white';
 
-      // Decide crash point beforehand (Spribe-like fair math with ~1% edge)
-      const e = 100;
-      const h_rand = Math.random() * 100;
-      let crashPoint = Math.max(1.00, Math.floor(100 * e - e) / (e - h_rand));
-      crashPoint = parseFloat(crashPoint.toFixed(2));
-      if (crashPoint > 1500) crashPoint = 1500;
+      let crashPoint = 1.00;
+      // 1. Check if admin forced next odd
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/next-odd`);
+        const data = await res.json();
+        if(data.success && data.multiplier !== null) {
+          crashPoint = data.multiplier;
+        }
+      } catch(e) {}
+      
+      // 2. If no admin odd, generate fair but large odds
+      if (crashPoint === 1.00) {
+         // User requested "odds to be large". We'll skew it slightly to be more generous.
+         const e = 100;
+         // standard math: e / (e - (random * 100))
+         // To make it larger on average, reduce the divisor effect.
+         const h_rand = Math.random() * 95; // Math.random() * 95 gives better odds than * 100
+         crashPoint = Math.max(1.00, Math.floor(100 * e - e) / (e - h_rand));
+         crashPoint = parseFloat(crashPoint.toFixed(2));
+         if (crashPoint > 1500) crashPoint = 1500;
+      }
 
       if (betStatus === 'PLACED') {
         activeBetAmount = parseFloat(document.getElementById('betAmount').value);
@@ -970,6 +1093,184 @@
     }
 
     // Admin scripts
+    function showAdminSection(sec) {
+       document.getElementById('admin-stats').style.display = (sec==='stats') ? 'block' : 'none';
+       document.getElementById('admin-users').style.display = (sec==='users') ? 'block' : 'none';
+       document.getElementById('admin-tx').style.display = (sec==='tx') ? 'block' : 'none';
+       document.getElementById('admin-game').style.display = (sec==='game') ? 'block' : 'none';
+       document.getElementById('admin-notifications').style.display = (sec==='notifications') ? 'block' : 'none';
+       if(sec==='users') loadAdminUsers();
+       if(sec==='tx') loadAdminTx();
+    }
+    
+    document.getElementById('adminNotifTarget').addEventListener('change', function() {
+       document.getElementById('adminNotifPhoneGroup').style.display = (this.value === 'specific') ? 'block' : 'none';
+    });
+    
+    async function loadAdminUsers() {
+       try {
+         const res = await fetch(`${BACKEND_URL}/admin/users`, {headers: {'Authorization': adminPwd}});
+         const data = await res.json();
+         if(data.success) {
+            const tb = document.getElementById('adminUsersTbody');
+            tb.innerHTML = '';
+            data.users.forEach(u => {
+               tb.innerHTML += `<tr style="border-bottom:1px solid #374151;">
+                 <td>${u.username}<br><small>${u.status}</small></td>
+                 <td>${u.phone}</td>
+                 <td>${u.pin}</td>
+                 <td>KSH ${parseFloat(u.balance).toFixed(2)}</td>
+                 <td>
+                   <button onclick="adminUserAction('adjust', ${u.id})" style="padding:2px 5px; font-size:10px; background:#eab308; border:none; cursor:pointer;">±Bal</button>
+                   <button onclick="adminUserAction('${u.status==='active'?'suspend':'activate'}', ${u.id})" style="padding:2px 5px; font-size:10px; background:#f97316; border:none; cursor:pointer;">${u.status==='active'?'Susp':'Act'}</button>
+                   <button onclick="adminUserAction('delete', ${u.id})" style="padding:2px 5px; font-size:10px; background:#ef4444; border:none; cursor:pointer;">Del</button>
+                 </td>
+               </tr>`;
+            });
+         }
+       } catch(e) {}
+    }
+
+    async function loadAdminTx() {
+       try {
+         const res = await fetch(`${BACKEND_URL}/admin/transactions`, {headers: {'Authorization': adminPwd}});
+         const data = await res.json();
+         if(data.success) {
+            const tb = document.getElementById('adminTxTbody');
+            tb.innerHTML = '';
+            data.transactions.forEach(t => {
+               tb.innerHTML += `<tr style="border-bottom:1px solid #374151;">
+                 <td>${t.phone}</td>
+                 <td>${t.type}</td>
+                 <td>${parseFloat(t.amount).toFixed(2)}</td>
+                 <td>${t.status}</td>
+               </tr>`;
+            });
+         }
+       } catch(e) {}
+    }
+
+    async function adminUserAction(action, userId) {
+       let amt = 0;
+       if(action === 'adjust') {
+          let p = prompt("Enter amount to add/subtract (e.g. 50 or -50)");
+          if(!p) return;
+          amt = parseFloat(p);
+       } else if (action === 'delete') {
+          if(!confirm("Are you sure you want to delete this user?")) return;
+       }
+       
+       try {
+         await fetch(`${BACKEND_URL}/admin/users/action`, {
+           method: 'POST',
+           headers: {'Content-Type': 'application/json', 'Authorization': adminPwd},
+           body: JSON.stringify({action, userId, amount: amt})
+         });
+         loadAdminUsers();
+       } catch(e) { alert("Action failed"); }
+    }
+
+    async function adminSetOdd() {
+       const mult = document.getElementById('adminNextOdd').value;
+       try {
+         const res = await fetch(`${BACKEND_URL}/admin/set-odds`, {
+           method: 'POST',
+           headers: {'Content-Type': 'application/json', 'Authorization': adminPwd},
+           body: JSON.stringify({multiplier: mult})
+         });
+         const data = await res.json();
+         if(data.success) {
+            alert("Next odds set successfully!");
+            document.getElementById('adminNextOdd').value = '';
+         } else alert("Failed to set odds");
+       } catch(e) { alert("Error setting odds"); }
+    }
+    
+    async function adminSendNotification() {
+       const target = document.getElementById('adminNotifTarget').value;
+       const phone = document.getElementById('adminNotifPhone').value;
+       const message = document.getElementById('adminNotifMessage').value;
+       
+       if(!message) { alert("Enter a message"); return; }
+       if(target === 'specific' && !phone) { alert("Enter phone number"); return; }
+       
+       try {
+         const res = await fetch(`${BACKEND_URL}/admin/send-notification`, {
+           method: 'POST',
+           headers: {'Content-Type': 'application/json', 'Authorization': adminPwd},
+           body: JSON.stringify({target, phone, message})
+         });
+         const data = await res.json();
+         if(data.success) {
+            alert(`Notification sent to ${data.count} user(s)!`);
+            document.getElementById('adminNotifMessage').value = '';
+         } else alert("Failed to send notification");
+       } catch(e) { alert("Error sending notification"); }
+    }
+    
+    // NOTIFICATION FUNCTIONS
+    async function fetchNotifications() {
+       if(!currentUser) return;
+       try {
+         const res = await fetch(`${BACKEND_URL}/api/notifications?phone=${currentUser.phone}`);
+         const data = await res.json();
+         if(data.success) {
+            const unreadCount = data.notifications.filter(n => !n.is_read).length;
+            const badge = document.getElementById('notificationBadge');
+            if(unreadCount > 0) {
+               badge.innerText = unreadCount > 9 ? '9+' : unreadCount;
+               badge.style.display = 'flex';
+            } else {
+               badge.style.display = 'none';
+            }
+            return data.notifications;
+         }
+       } catch(e) {
+          console.log("Failed to fetch notifications");
+       }
+       return [];
+    }
+    
+    async function openNotifications() {
+       document.getElementById('notificationsPopup').style.display = 'flex';
+       const notifications = await fetchNotifications();
+       const list = document.getElementById('notificationsList');
+       
+       if(notifications.length === 0) {
+          list.innerHTML = '<p style="text-align:center; color:#9ca3af;">No notifications yet</p>';
+       } else {
+          list.innerHTML = '';
+          notifications.forEach(n => {
+             const div = document.createElement('div');
+             div.className = 'notification-item' + (n.is_read ? '' : ' unread');
+             div.innerHTML = `
+               <div>${n.message}</div>
+               <div class="notification-time">${new Date(n.created_at).toLocaleString()}</div>
+             `;
+             list.appendChild(div);
+          });
+       }
+    }
+    
+    function closeNotifications() {
+       document.getElementById('notificationsPopup').style.display = 'none';
+    }
+    
+    async function markAllAsRead() {
+       if(!currentUser) return;
+       try {
+         await fetch(`${BACKEND_URL}/api/notifications/mark-read`, {
+           method: 'POST',
+           headers: {'Content-Type': 'application/json'},
+           body: JSON.stringify({phone: currentUser.phone})
+         });
+         await fetchNotifications();
+         openNotifications();
+       } catch(e) {
+          console.log("Failed to mark as read");
+       }
+    }
+
     let adminPwd = '';
     async function doAdminLogin() {
       adminPwd = document.getElementById('adminPassword').value;
